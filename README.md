@@ -1,22 +1,22 @@
 <div align="center">
 
-# WeChat MCP Server
+# WeChat Mac Automation
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![PyPI version](https://img.shields.io/pypi/v/wechat-mcp-server.svg)](https://pypi.org/project/wechat-mcp-server/)
+[![PyPI version](https://img.shields.io/pypi/v/wechat-mac-automation.svg)](https://pypi.org/project/wechat-mac-automation/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 [中文](docs/README_zh.md) | English
 
 </div>
 
-An MCP server that automates WeChat on macOS using the Accessibility API and screen capture. It enables LLMs to interact with WeChat chats programmatically.
+A Python API, CLI, and MCP server for automating WeChat on macOS using the Accessibility API and screen capture. It enables local programs and LLM clients to interact with WeChat chats and Moments programmatically.
 
 ## Features
 
 - 📨 Fetch recent messages from any chat (contact or group)
 - ✍️ Send automated replies based on chat history
-- 📷 Publish text-only Moments posts, with optional draft-only mode
+- 📷 Publish text or single-image Moments posts, with optional draft-only mode
 - 👥 Add contacts using WeChat ID with configurable privacy
 - 🔍 Smart chat search with exact name matching
 - 🤖 5 specialized Claude Code sub-agents for smart WeChat automation
@@ -26,7 +26,7 @@ An MCP server that automates WeChat on macOS using the Accessibility API and scr
 ### Installation
 
 ```bash
-pip install wechat-mcp-server
+pip install wechat-mac-automation
 ```
 
 ### Setup with Claude Code
@@ -36,7 +36,7 @@ pip install wechat-mcp-server
 claude mcp add --transport stdio wechat-mcp -- wechat-mcp
 
 # If using uv for development
-claude mcp add --transport stdio wechat-mcp -- uv --directory $(pwd) run wechat-mcp
+claude mcp add --transport stdio wechat-mcp -- uv --directory $(pwd) run wechat-mac-mcp
 ```
 
 <details>
@@ -61,9 +61,9 @@ claude mcp add --transport stdio wechat-mcp -- uv --directory $(pwd) run wechat-
       "command": "uv",
       "args": [
         "--directory",
-        "{path/to/wechat-mcp}",
+        "{path/to/wechat-mac-automation}",
         "run",
-        "wechat-mcp"
+        "wechat-mac-mcp"
       ],
     }
   }
@@ -80,7 +80,7 @@ claude mcp add --transport stdio wechat-mcp -- uv --directory $(pwd) run wechat-
 codex mcp add wechat-mcp -- wechat-mcp
 
 # If using uv for development
-codex mcp add wechat-mcp -- uv --directory $(pwd) run wechat-mcp
+codex mcp add wechat-mcp -- uv --directory $(pwd) run wechat-mac-mcp
 ```
 
 </details>
@@ -99,13 +99,13 @@ codex mcp add wechat-mcp -- uv --directory $(pwd) run wechat-mcp
 
 ```bash
 # Run with default stdio transport
-wechat-mcp --transport stdio
+wechat-mac-mcp --transport stdio
 
 # Run with HTTP transport
-wechat-mcp --transport streamable-http
+wechat-mac-mcp --transport streamable-http
 
 # Run with SSE transport
-wechat-mcp --transport sse
+wechat-mac-mcp --transport sse
 ```
 
 ### Python API / CLI Usage
@@ -122,13 +122,13 @@ reply_to_chat("Contact Name", "Hello from Python")
 Or run the command line wrapper, which prints JSON:
 
 ```bash
-uv run wechat-mcp-cli current-chat
-uv run wechat-mcp-cli search-chats --query "Contact keyword"
-uv run wechat-mcp-cli fetch-messages --chat "Contact Name" --last-n 20
-uv run wechat-mcp-cli reply --chat "Contact Name" --message "Hello from CLI"
-uv run wechat-mcp-cli add-contact --wechat-id "wechat_id"
-uv run wechat-mcp-cli publish-moment --content "Text-only moment" --draft
-uv run wechat-mcp-cli publish-moment --content "Moment with image" --image "/path/to/image.png" --draft
+uv run wechat-mac current-chat
+uv run wechat-mac search-chats --query "Contact keyword"
+uv run wechat-mac fetch-messages --chat "Contact Name" --last-n 20
+uv run wechat-mac reply --chat "Contact Name" --message "Hello from CLI"
+uv run wechat-mac add-contact --wechat-id "wechat_id"
+uv run wechat-mac publish-moment --content "Text-only moment" --draft
+uv run wechat-mac publish-moment --content "Moment with image" --image "/path/to/image.png" --draft
 ```
 
 ### Available MCP Tools
@@ -136,7 +136,7 @@ uv run wechat-mcp-cli publish-moment --content "Moment with image" --image "/pat
 - **`fetch_messages_by_chat`** - Get recent messages from a chat
 - **`reply_to_messages_by_chat`** - Send a reply to a chat
 - **`add_contact_by_wechat_id`** - Add a new contact using a WeChat ID and send a friend request
-- **`publish_moment_without_media`** - Publish a text-only Moments post (no photos or videos); optionally only prepare a draft without posting via `publish=False`
+- **`publish_moment_without_media`** - Publish a text-only Moments post; optionally only prepare a draft without posting via `publish=False`
 
 See [detailed API documentation](docs/detailed-guide.md) for full tool specifications.
 
@@ -163,12 +163,12 @@ This project includes 5 intelligent sub-agents designed specifically for WeChat 
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone and setup
-git clone https://github.com/yourusername/WeChat-MCP.git
-cd WeChat-MCP
+git clone https://github.com/voidvon/wechat-mac-automation.git
+cd wechat-mac-automation
 uv sync
 
 # Run locally
-uv run wechat-mcp --transport stdio
+uv run wechat-mac-mcp --transport stdio
 ```
 
 ### Tests

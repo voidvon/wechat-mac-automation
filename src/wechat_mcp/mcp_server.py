@@ -15,7 +15,7 @@ from .api import (
 from .logging_config import logger
 
 
-mcp = FastMCP("WeChat Helper MCP Server")
+mcp = FastMCP("WeChat Mac Automation MCP Server")
 
 
 @mcp.tool()
@@ -116,9 +116,9 @@ def publish_moment_without_media(
 
 def main() -> None:
     """
-    Entry point for the WeChat MCP server.
+    Entry point for the WeChat Mac Automation MCP server.
     """
-    parser = argparse.ArgumentParser(description="WeChat Helper MCP Server")
+    parser = argparse.ArgumentParser(description="WeChat Mac Automation MCP Server")
     parser.add_argument(
         "--mcp-debug",
         action="store_true",
@@ -146,7 +146,7 @@ def main() -> None:
         for handler in logging.getLogger().handlers:
             handler.setFormatter(debug_formatter)
 
-    logger.info("Starting WeChat Helper MCP Server")
+    logger.info("Starting WeChat Mac Automation MCP Server")
     logger.info("Transport: %s", args.transport)
     logger.info("MCP Debug mode: %s", args.mcp_debug)
 

@@ -1,7 +1,7 @@
 [project]
-name = "wechat-mcp-server"
+name = "wechat-mac-automation"
 version = "0.2.0"
-description = "WeChat MCP server for reading and replying to messages via macOS Accessibility APIs"
+description = "WeChat for Mac automation toolkit with Python API, CLI, and MCP server support"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "Banghao Chi", email = "banghao2@illinois.edu" }]
@@ -33,12 +33,14 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/BiboyQG/WeChat-MCP"
-Repository = "https://github.com/BiboyQG/WeChat-MCP.git"
-Issues = "https://github.com/BiboyQG/WeChat-MCP/issues"
-Documentation = "https://github.com/BiboyQG/WeChat-MCP#readme"
+Homepage = "https://github.com/voidvon/wechat-mac-automation"
+Repository = "https://github.com/voidvon/wechat-mac-automation.git"
+Issues = "https://github.com/voidvon/wechat-mac-automation/issues"
+Documentation = "https://github.com/voidvon/wechat-mac-automation#readme"
 
 [project.scripts]
+wechat-mac = "wechat_mcp.cli:main"
+wechat-mac-mcp = "wechat_mcp.mcp_server:main"
 wechat-mcp = "wechat_mcp.mcp_server:main"
 wechat-mcp-cli = "wechat_mcp.cli:main"
 

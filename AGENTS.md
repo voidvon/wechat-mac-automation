@@ -1,16 +1,19 @@
 # Repository Guidelines
 
 ## Project Structure & Modules
-- Core code lives in `src/wechat_mcp` (MCP server, accessibility helpers, logging).
-- Entry point is `wechat_mcp.mcp_server:main`, exposed as the `wechat-mcp` script.
+- Core code lives in `src/wechat_mcp` (Python API, CLI, MCP server, accessibility helpers, logging).
+- Public API lives in `wechat_mcp.api` and is exported from `wechat_mcp`.
+- CLI entry point is `wechat_mcp.cli:main`, exposed as `wechat-mac` and compatibility alias `wechat-mcp-cli`.
+- MCP entry point is `wechat_mcp.mcp_server:main`, exposed as `wechat-mac-mcp` and compatibility alias `wechat-mcp`.
 - Logs are written under `logs/` by default (configurable via `WECHAT_MCP_LOG_DIR`).
 - Keep macOS Accessibility and WeChat-specific logic in `wechat_accessibility.py`.
 
 ## Build, Run & Development
 - Install dependencies: `uv sync` from the repository root.
-- Run the MCP server (stdio): `uv run wechat-mcp --transport stdio`.
-- Run over HTTP/SSE: `uv run wechat-mcp --transport streamable-http` or `--transport sse`.
-- Enable protocol debugging: `uv run wechat-mcp --mcp-debug --transport stdio`.
+- Run the CLI: `uv run wechat-mac --help`.
+- Run the MCP server (stdio): `uv run wechat-mac-mcp --transport stdio`.
+- Run over HTTP/SSE: `uv run wechat-mac-mcp --transport streamable-http` or `--transport sse`.
+- Enable protocol debugging: `uv run wechat-mac-mcp --mcp-debug --transport stdio`.
 
 ## Coding Style & Naming
 - Python 3.12+, PEP 8 style, 4-space indentation, type hints where practical.
@@ -19,7 +22,7 @@
 - Keep functions small, with clear docstrings explaining interaction with macOS Accessibility APIs.
 
 ## Testing Guidelines
-- No formal automated test suite yet; new tests should use `pytest` under `tests/` mirroring `src/wechat_mcp`.
+- Automated CLI tests use `pytest` under `tests/`, with real WeChat automation mocked out.
 - Name test files `test_*.py` and test functions `test_*`.
 - Run tests with `uv run pytest`.
 - Avoid hitting real Accessibility APIs in unit tests; isolate them behind helper functions and use fakes where possible.

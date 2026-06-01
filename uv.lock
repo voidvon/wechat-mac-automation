@@ -3472,7 +3472,7 @@ wheels = [
 ]
 
 [[package]]
-name = "wechat-mcp-server"
+name = "wechat-mac-automation"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [

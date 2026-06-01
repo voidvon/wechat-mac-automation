@@ -51,7 +51,7 @@ def _write_json_with_args(payload: Any, args: argparse.Namespace) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="wechat-mcp-cli",
+        prog="wechat-mac",
         description="Command line tools for automating WeChat on macOS.",
     )
     parser.add_argument(

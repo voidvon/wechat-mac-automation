@@ -1,17 +1,26 @@
-# WeChat MCP Server - Detailed Guide
+# WeChat Mac Automation - Detailed Guide
 
-This document provides detailed information about the WeChat MCP server implementation, architecture, and usage.
+This document provides detailed information about the WeChat Mac automation toolkit implementation, architecture, and usage.
 
 ## Overview
 
-This project provides an MCP server that automates WeChat on macOS using the Accessibility API and screen capture. It exposes tools that LLMs can call to:
+This project automates WeChat on macOS using the Accessibility API and screen capture. It exposes a Python API, a JSON-emitting CLI, and an MCP server that LLM clients can call to:
 
 - Fetch recent messages for a specific chat (contact or group)
-- Generate and send a reply to a chat based on recent history
+- Search chats and resolve exact contact/group names
+- Send replies to chats
+- Add contacts by WeChat ID
+- Prepare or publish text and single-image Moments posts
+
+## Public entry points
+
+- Python API: `src/wechat_mcp/api.py`, exported from `wechat_mcp`
+- CLI: `wechat-mac` (primary) and `wechat-mcp-cli` (compatibility alias)
+- MCP server: `wechat-mac-mcp` (primary) and `wechat-mcp` (compatibility alias)
 
 ## Tools exposed to MCP clients
 
-The server is implemented in `src/wechat_mcp/mcp_server.py` and defines two `@mcp.tool()` functions:
+The MCP server is implemented in `src/wechat_mcp/mcp_server.py` and wraps the shared Python API functions.
 
 ### `fetch_messages_by_chat`
 
@@ -71,6 +80,14 @@ On success it returns a JSON object describing the applied settings (including `
 ### Core Components
 
 The project consists of several key modules:
+
+#### `src/wechat_mcp/api.py`
+
+The shared public API used by the CLI and MCP server. It provides stable functions for chat search, message fetching, replies, contact requests, and Moments publishing.
+
+#### `src/wechat_mcp/cli.py`
+
+The JSON-emitting command line interface. The primary command is `wechat-mac`; `wechat-mcp-cli` is retained as a compatibility alias.
 
 #### `src/wechat_mcp/mcp_server.py`
 
@@ -137,9 +154,10 @@ Implements the Accessibility flow for adding contacts by WeChat ID:
 
 #### `src/wechat_mcp/publish_moment_utils.py`
 
-Implements the Accessibility flow for publishing a Moments post without media:
+Implements the Accessibility flow for preparing or publishing Moments posts:
 
 - `publish_moment_without_media(content, publish=True)` - Drive the full `"WeChat" main window` → `"Moments"` window → long‑press `"Post"` → composer sheet → `"Post"` flow for text‑only Moments. When `publish=False`, the composer is filled but the final `"Post"` button is not clicked, leaving the sheet open.
+- `publish_moment_with_media(content, image_paths, publish=True)` - Short-click the Moments post button, select a single image via the macOS open panel, fill the caption, and optionally publish.
 - Helper functions:
   - `_open_moments_window(ax_app, timeout)` - Click the `"Moments"` button and wait for the `"Moments"` window
   - `_open_moment_composer(moments_window)` - Long‑press the `"Post"` button to reveal the composer sheet
@@ -235,13 +253,13 @@ Example usage:
 
 ```bash
 # stdio (default)
-wechat-mcp --transport stdio
+wechat-mac-mcp --transport stdio
 
 # HTTP streaming
-wechat-mcp --transport streamable-http
+wechat-mac-mcp --transport streamable-http
 
 # Server-Sent Events
-wechat-mcp --transport sse
+wechat-mac-mcp --transport sse
 ```
 
 ## Development
@@ -253,11 +271,11 @@ For local development using `uv`:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Sync environment
-cd WeChat-MCP
+cd wechat-mac-automation
 uv sync
 
 # Run the server
-uv run wechat-mcp --transport stdio
+uv run wechat-mac-mcp --transport stdio
 ```
 
 ## Troubleshooting

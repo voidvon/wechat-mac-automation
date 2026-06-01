@@ -1,6 +1,6 @@
 <div align="center">
 
-# WeChat MCP Server
+# WeChat Mac Automation
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![MCP Compatible](https://img.shields.io/badge/MCP-compatible-green.svg)](https://modelcontextprotocol.io/)
@@ -10,13 +10,13 @@
 
 </div>
 
-一个基于 macOS 无障碍 API 和屏幕截图的 MCP 服务器，可自动化操作微信。它让 LLM 能够以编程方式与微信聊天进行交互。
+一个基于 macOS 无障碍 API 和屏幕截图的微信 Mac 自动化工具包，提供 Python API、CLI 和 MCP Server。它让本地程序和 LLM 客户端能够以编程方式与微信聊天和朋友圈交互。
 
 ## 功能特性
 
 - 📨 获取任何聊天（联系人或群组）的最近消息
 - ✍️ 基于聊天历史自动发送回复
-- 📷 发布纯文字朋友圈消息，并可设置仅创建草稿
+- 📷 发布纯文字或单图朋友圈消息，并可设置仅创建草稿
 - 👥 通过微信号添加联系人并配置隐私选项
 - 🔍 智能聊天搜索，支持精确名称匹配
 - 🤖 5 个专门为微信自动化设计的 Claude Code 子代理
@@ -26,7 +26,7 @@
 ### 安装
 
 ```bash
-pip install wechat-mcp-server
+pip install wechat-mac-automation
 ```
 
 ### 在 Claude Code 中配置
@@ -36,7 +36,7 @@ pip install wechat-mcp-server
 claude mcp add --transport stdio wechat-mcp -- wechat-mcp
 
 # 如果使用 uv 进行开发
-claude mcp add --transport stdio wechat-mcp -- uv --directory $(pwd) run wechat-mcp
+claude mcp add --transport stdio wechat-mcp -- uv --directory $(pwd) run wechat-mac-mcp
 ```
 
 <details>
@@ -61,9 +61,9 @@ claude mcp add --transport stdio wechat-mcp -- uv --directory $(pwd) run wechat-
       "command": "uv",
       "args": [
         "--directory",
-        "{path/to/wechat-mcp}",
+        "{path/to/wechat-mac-automation}",
         "run",
-        "wechat-mcp"
+        "wechat-mac-mcp"
       ],
     }
   }
@@ -80,7 +80,7 @@ claude mcp add --transport stdio wechat-mcp -- uv --directory $(pwd) run wechat-
 codex mcp add wechat-mcp -- wechat-mcp
 
 # 如果使用 uv 进行开发
-codex mcp add wechat-mcp -- uv --directory $(pwd) run wechat-mcp
+codex mcp add wechat-mcp -- uv --directory $(pwd) run wechat-mac-mcp
 ```
 
 </details>
@@ -99,13 +99,13 @@ codex mcp add wechat-mcp -- uv --directory $(pwd) run wechat-mcp
 
 ```bash
 # 使用默认的 stdio 传输方式运行
-wechat-mcp --transport stdio
+wechat-mac-mcp --transport stdio
 
 # 使用 HTTP 传输方式运行
-wechat-mcp --transport streamable-http
+wechat-mac-mcp --transport streamable-http
 
 # 使用 SSE 传输方式运行
-wechat-mcp --transport sse
+wechat-mac-mcp --transport sse
 ```
 
 ### Python API / CLI 用法
@@ -122,13 +122,13 @@ reply_to_chat("联系人名称", "来自 Python 的消息")
 也可以使用命令行包装器，输出为 JSON：
 
 ```bash
-uv run wechat-mcp-cli current-chat
-uv run wechat-mcp-cli search-chats --query "联系人关键词"
-uv run wechat-mcp-cli fetch-messages --chat "联系人名称" --last-n 20
-uv run wechat-mcp-cli reply --chat "联系人名称" --message "来自 CLI 的消息"
-uv run wechat-mcp-cli add-contact --wechat-id "wechat_id"
-uv run wechat-mcp-cli publish-moment --content "纯文字朋友圈" --draft
-uv run wechat-mcp-cli publish-moment --content "带图朋友圈" --image "/path/to/image.png" --draft
+uv run wechat-mac current-chat
+uv run wechat-mac search-chats --query "联系人关键词"
+uv run wechat-mac fetch-messages --chat "联系人名称" --last-n 20
+uv run wechat-mac reply --chat "联系人名称" --message "来自 CLI 的消息"
+uv run wechat-mac add-contact --wechat-id "wechat_id"
+uv run wechat-mac publish-moment --content "纯文字朋友圈" --draft
+uv run wechat-mac publish-moment --content "带图朋友圈" --image "/path/to/image.png" --draft
 ```
 
 ### 可用的 MCP 工具
@@ -136,7 +136,7 @@ uv run wechat-mcp-cli publish-moment --content "带图朋友圈" --image "/path/
 - **`fetch_messages_by_chat`** - 获取聊天的最近消息
 - **`reply_to_messages_by_chat`** - 向聊天发送回复
 - **`add_contact_by_wechat_id`** - 通过微信号添加联系人并发送好友申请
-- **`publish_moment_without_media`** - 发布纯文字朋友圈（无图片或视频），也可以通过 `publish=False` 仅填充草稿而不真正发布
+- **`publish_moment_without_media`** - 发布纯文字朋友圈，也可以通过 `publish=False` 仅填充草稿而不真正发布
 
 完整的工具规格请查看[详细 API 文档](detailed-guide.md)。
 
@@ -163,12 +163,12 @@ uv run wechat-mcp-cli publish-moment --content "带图朋友圈" --image "/path/
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 克隆并设置
-git clone https://github.com/yourusername/WeChat-MCP.git
-cd WeChat-MCP
+git clone https://github.com/voidvon/wechat-mac-automation.git
+cd wechat-mac-automation
 uv sync
 
 # 本地运行
-uv run wechat-mcp --transport stdio
+uv run wechat-mac-mcp --transport stdio
 ```
 
 ### 测试
