@@ -108,6 +108,29 @@ wechat-mcp --transport streamable-http
 wechat-mcp --transport sse
 ```
 
+### Python API / CLI Usage
+
+Use this package directly from another Python program:
+
+```python
+from wechat_mcp import fetch_messages_by_chat, reply_to_chat
+
+messages = fetch_messages_by_chat("Contact Name", last_n=20)
+reply_to_chat("Contact Name", "Hello from Python")
+```
+
+Or run the command line wrapper, which prints JSON:
+
+```bash
+uv run wechat-mcp-cli current-chat
+uv run wechat-mcp-cli search-chats --query "Contact keyword"
+uv run wechat-mcp-cli fetch-messages --chat "Contact Name" --last-n 20
+uv run wechat-mcp-cli reply --chat "Contact Name" --message "Hello from CLI"
+uv run wechat-mcp-cli add-contact --wechat-id "wechat_id"
+uv run wechat-mcp-cli publish-moment --content "Text-only moment" --draft
+uv run wechat-mcp-cli publish-moment --content "Moment with image" --image "/path/to/image.png" --draft
+```
+
 ### Available MCP Tools
 
 - **`fetch_messages_by_chat`** - Get recent messages from a chat
@@ -147,6 +170,17 @@ uv sync
 # Run locally
 uv run wechat-mcp --transport stdio
 ```
+
+### Tests
+
+```bash
+uv run pytest
+```
+
+The automated CLI tests mock WeChat operations, so they validate command
+parsing and JSON output without sending messages or changing WeChat state.
+The accessibility matchers support common English and Simplified Chinese
+WeChat labels.
 
 ## Documentation
 

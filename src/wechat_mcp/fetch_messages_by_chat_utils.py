@@ -32,7 +32,11 @@ def get_messages_list(ax_app: Any) -> Any:
     """
 
     def is_message_list(el, role, title, identifier):
-        return role == kAXListRole and (title or "") == "Messages"
+        if role != kAXListRole:
+            return False
+        if identifier == "chat_message_list":
+            return True
+        return (title or "") in ("Messages", "消息")
 
     msg_list = dfs(ax_app, is_message_list)
     if msg_list is None:
@@ -63,15 +67,15 @@ def capture_message_area(msg_list: Any):
 def scroll_to_bottom(msg_list: Any, center: tuple[float, float]) -> None:
     """
     Scroll the messages list to the bottom (newest messages) by repeatedly
-    sending large negative scroll events until the last visible message
+    sending large positive scroll events until the last visible message
     stabilizes.
     """
     last_text: str | None = None
     stable = 0
 
     for _ in range(40):
-        # Negative delta moves towards newer messages (bottom of history).
-        post_scroll(center, -1000)
+        # Positive delta moves towards newer messages (bottom of history).
+        post_scroll(center, 1000)
         time.sleep(0.05)
 
         children = ax_get(msg_list, kAXChildrenAttribute) or []
@@ -99,8 +103,8 @@ def scroll_up_small(center: tuple[float, float]) -> None:
     """
     Scroll slightly upwards to reveal older messages.
     """
-    # Positive delta scrolls towards older messages.
-    post_scroll(center, 50)
+    # Negative delta scrolls towards older messages.
+    post_scroll(center, -50)
     time.sleep(0.1)
 
 

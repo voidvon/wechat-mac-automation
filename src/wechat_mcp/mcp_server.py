@@ -6,14 +6,13 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from .logging_config import logger
-from .add_contact_by_wechat_id_utils import (
-    add_contact_by_wechat_id as ax_add_contact_by_wechat_id,
+from .api import (
+    add_contact_by_wechat_id as api_add_contact_by_wechat_id,
+    fetch_messages_by_chat as api_fetch_messages_by_chat,
+    publish_moment_without_media as api_publish_moment_without_media,
+    reply_to_messages_by_chat as api_reply_to_messages_by_chat,
 )
-from .fetch_messages_by_chat_utils import ChatMessage, fetch_recent_messages
-from .publish_moment_utils import publish_moment_without_media as ax_publish_moment
-from .reply_to_messages_by_chat_utils import send_message
-from .wechat_accessibility import get_current_chat_name, open_chat_for_contact
+from .logging_config import logger
 
 
 mcp = FastMCP("WeChat Helper MCP Server")
@@ -33,45 +32,7 @@ def fetch_messages_by_chat(
     - If not found, search for the chat via the search box
     - Once the chat is open, retrieve recent messages from that chat
     """
-    try:
-        logger.info("Tool fetch_messages_by_chat called for chat=%s", chat_name)
-        current_chat = get_current_chat_name()
-        same_chat = current_chat == chat_name if current_chat is not None else False
-        logger.info(
-            "Current chat title=%r, target=%r, same_chat=%s",
-            current_chat,
-            chat_name,
-            same_chat,
-        )
-        if not same_chat:
-            open_result = open_chat_for_contact(chat_name)
-            if isinstance(open_result, dict) and open_result.get("error"):
-                # No exact match; surface candidates instead of forcing a chat.
-                logger.info(
-                    "open_chat_for_contact returned candidates for chat=%s; "
-                    "skipping message fetch",
-                    chat_name,
-                )
-                enriched = dict(open_result)
-                enriched.setdefault("tool", "fetch_messages_by_chat")
-                return [enriched]
-
-        messages: list[ChatMessage] = fetch_recent_messages(last_n=last_n)
-        result = [msg.to_dict() for msg in messages]
-        logger.info("Returning %d messages for chat=%s", len(result), chat_name)
-        return result
-    except Exception as exc:
-        logger.exception(
-            "Error in fetch_messages_by_chat for chat=%s: %s",
-            chat_name,
-            exc,
-        )
-        return [
-            {
-                "error": str(exc),
-                "chat_name": chat_name,
-            }
-        ]
+    return api_fetch_messages_by_chat(chat_name=chat_name, last_n=last_n)
 
 
 @mcp.tool()
@@ -90,63 +51,10 @@ def reply_to_messages_by_chat(
     If reply_message is None or empty, no message is sent; the tool still
     ensures the chat is open.
     """
-    logger.info(
-        "Tool reply_to_messages_by_chat called for chat=%s (has_reply=%s)",
-        chat_name,
-        bool(reply_message),
+    return api_reply_to_messages_by_chat(
+        chat_name=chat_name,
+        reply_message=reply_message,
     )
-    try:
-        current_chat = get_current_chat_name()
-        same_chat = current_chat == chat_name if current_chat is not None else False
-        logger.info(
-            "Current chat title=%r, target=%r, same_chat=%s",
-            current_chat,
-            chat_name,
-            same_chat,
-        )
-        if not same_chat:
-            open_result = open_chat_for_contact(chat_name)
-            if isinstance(open_result, dict) and open_result.get("error"):
-                logger.info(
-                    "open_chat_for_contact returned candidates for chat=%s; "
-                    "skipping reply send",
-                    chat_name,
-                )
-                enriched: dict[str, Any] = {
-                    "error": open_result.get("error"),
-                    "chat_name": chat_name,
-                    "candidates": open_result.get("candidates", {}),
-                    "reply_message": reply_message,
-                    "sent": False,
-                    "tool": "reply_to_messages_by_chat",
-                }
-                return enriched
-
-        sent = False
-        if reply_message is not None and reply_message.strip():
-            send_message(reply_message)
-            sent = True
-            logger.info(
-                "Reply sent to chat=%s; message length=%d",
-                chat_name,
-                len(reply_message),
-            )
-
-        return {
-            "chat_name": chat_name,
-            "reply_message": reply_message,
-            "sent": sent,
-        }
-    except Exception as exc:
-        logger.exception(
-            "Error in reply_to_messages_by_chat for chat=%s: %s",
-            chat_name,
-            exc,
-        )
-        return {
-            "error": str(exc),
-            "chat_name": chat_name,
-        }
 
 
 @mcp.tool()
@@ -175,34 +83,15 @@ def add_contact_by_wechat_id(
       the `hide_my_posts` / `hide_their_posts` flags.
     - "chats_only" selects "Chats Only" and ignores the hide flags.
     """
-    logger.info(
-        "Tool add_contact_by_wechat_id called for ID=%s (privacy=%r, hide_my_posts=%s, hide_their_posts=%s)",
-        wechat_id,
-        privacy,
-        hide_my_posts,
-        hide_their_posts,
+    return api_add_contact_by_wechat_id(
+        wechat_id=wechat_id,
+        friending_msg=friending_msg,
+        remark=remark,
+        tags=tags,
+        privacy=privacy,
+        hide_my_posts=hide_my_posts,
+        hide_their_posts=hide_their_posts,
     )
-    try:
-        result = ax_add_contact_by_wechat_id(
-            wechat_id=wechat_id,
-            friending_msg=friending_msg,
-            remark=remark,
-            tags=tags,
-            privacy=privacy,
-            hide_my_posts=hide_my_posts,
-            hide_their_posts=hide_their_posts,
-        )
-        return result
-    except Exception as exc:
-        logger.exception(
-            "Error in add_contact_by_wechat_id for ID=%s: %s",
-            wechat_id,
-            exc,
-        )
-        return {
-            "error": str(exc),
-            "wechat_id": wechat_id,
-        }
 
 
 @mcp.tool()
@@ -222,20 +111,7 @@ def publish_moment_without_media(
       sheet to publish the moment; if False, leave the composer open
       without sending.
     """
-    logger.info(
-        "Tool publish_moment_without_media called (content_length=%d, publish=%s)",
-        len(content) if isinstance(content, str) else -1,
-        publish,
-    )
-    try:
-        result = ax_publish_moment(content=content, publish=publish)
-        return result
-    except Exception as exc:
-        logger.exception("Error in publish_moment_without_media: %s", exc)
-        return {
-            "error": str(exc),
-            "content": content,
-        }
+    return api_publish_moment_without_media(content=content, publish=publish)
 
 
 def main() -> None:

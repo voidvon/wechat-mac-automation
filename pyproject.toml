@@ -40,6 +40,7 @@ Documentation = "https://github.com/BiboyQG/WeChat-MCP#readme"
 
 [project.scripts]
 wechat-mcp = "wechat_mcp.mcp_server:main"
+wechat-mcp-cli = "wechat_mcp.cli:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -47,3 +48,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wechat_mcp"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]

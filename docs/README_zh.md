@@ -108,6 +108,29 @@ wechat-mcp --transport streamable-http
 wechat-mcp --transport sse
 ```
 
+### Python API / CLI 用法
+
+在其他 Python 程序中直接作为依赖包调用：
+
+```python
+from wechat_mcp import fetch_messages_by_chat, reply_to_chat
+
+messages = fetch_messages_by_chat("联系人名称", last_n=20)
+reply_to_chat("联系人名称", "来自 Python 的消息")
+```
+
+也可以使用命令行包装器，输出为 JSON：
+
+```bash
+uv run wechat-mcp-cli current-chat
+uv run wechat-mcp-cli search-chats --query "联系人关键词"
+uv run wechat-mcp-cli fetch-messages --chat "联系人名称" --last-n 20
+uv run wechat-mcp-cli reply --chat "联系人名称" --message "来自 CLI 的消息"
+uv run wechat-mcp-cli add-contact --wechat-id "wechat_id"
+uv run wechat-mcp-cli publish-moment --content "纯文字朋友圈" --draft
+uv run wechat-mcp-cli publish-moment --content "带图朋友圈" --image "/path/to/image.png" --draft
+```
+
 ### 可用的 MCP 工具
 
 - **`fetch_messages_by_chat`** - 获取聊天的最近消息
@@ -147,6 +170,15 @@ uv sync
 # 本地运行
 uv run wechat-mcp --transport stdio
 ```
+
+### 测试
+
+```bash
+uv run pytest
+```
+
+自动化 CLI 测试会 mock 微信操作，因此只验证命令解析和 JSON 输出，不会发送消息或改变微信状态。
+无障碍元素匹配已兼容常见英文和简体中文微信标签。
 
 ## 文档
 

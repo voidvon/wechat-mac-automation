@@ -22,6 +22,7 @@ from ApplicationServices import (
     kAXSizeAttribute,
     kAXStaticTextRole,
     kAXTextAreaRole,
+    kAXTextFieldRole,
     kAXTitleAttribute,
     kAXValueAttribute,
     kAXValueCGPointType,
@@ -107,6 +108,17 @@ def _find_window_by_title(ax_app: Any, title: str):
     return dfs(ax_app, is_window)
 
 
+def _find_window_by_titles(ax_app: Any, titles: tuple[str, ...]):
+    """
+    Locate a top-level WeChat window whose title matches any supplied title.
+    """
+    for title in titles:
+        window = _find_window_by_title(ax_app, title)
+        if window is not None:
+            return window
+    return None
+
+
 def _wait_for_window(ax_app: Any, title: str, timeout: float = 5.0):
     """
     Wait for a window with the given title to appear, returning the AX
@@ -120,6 +132,25 @@ def _wait_for_window(ax_app: Any, title: str, timeout: float = 5.0):
             return window
         time.sleep(0.1)
     logger.warning("Timed out waiting for window %r", title)
+    return None
+
+
+def _wait_for_window_titles(
+    ax_app: Any,
+    titles: tuple[str, ...],
+    timeout: float = 5.0,
+):
+    """
+    Wait for a window matching any supplied title.
+    """
+    end = time.time() + timeout
+    while time.time() < end:
+        window = _find_window_by_titles(ax_app, titles)
+        if window is not None:
+            logger.info("Found window with one of titles %r", titles)
+            return window
+        time.sleep(0.1)
+    logger.warning("Timed out waiting for windows %r", titles)
     return None
 
 
@@ -267,7 +298,11 @@ def long_press_element_center(element, hold_seconds: float = 2.2) -> None:
 
 def find_search_field(ax_app):
     def is_search(el, role, title, identifier):
-        return role == kAXTextAreaRole and title == "Search"
+        if role not in (kAXTextAreaRole, kAXTextFieldRole):
+            return False
+        if identifier == "chat_input_field":
+            return False
+        return title in ("Search", "搜索")
 
     search = dfs(ax_app, is_search)
     if search is None:
@@ -407,6 +442,28 @@ class SearchEntry:
     y: float
 
 
+SECTION_TITLE_MAP = {
+    "Most Used": "Contacts",
+    "最常使用": "Contacts",
+    "Contacts": "Contacts",
+    "联系人": "Contacts",
+    "Group Chats": "Group Chats",
+    "群聊": "Group Chats",
+    "Chat History": "Chat History",
+    "聊天记录": "Chat History",
+    "Official Accounts": "Official Accounts",
+    "公众号": "Official Accounts",
+    "Internet search results": "Internet search results",
+    "搜索网络结果": "Internet search results",
+    "More": "More",
+    "更多": "More",
+}
+
+
+def _is_search_control_entry(text: str) -> bool:
+    return text.startswith(("View All", "Collapse", "查看全部", "收起"))
+
+
 def _collect_search_entries(search_list) -> list[SearchEntry]:
     """
     Collect visible static-text entries from the search results list,
@@ -444,20 +501,15 @@ def _collect_search_entries(search_list) -> list[SearchEntry]:
 
 def _build_section_headers(entries: list[SearchEntry]) -> dict[str, float]:
     """
-    Map known section titles ("Contacts", "Group Chats", "Chat History", "Official Accounts", "Internet search results", "More")
-    to their vertical Y coordinate within the search list.
+    Map known section titles to their vertical Y coordinate within the
+    search list. English and Simplified Chinese WeChat labels are normalized
+    to the English section names used by the selection logic.
     """
     headers: dict[str, float] = {}
     for entry in entries:
-        if entry.text in (
-            "Contacts",
-            "Group Chats",
-            "Chat History",
-            "Official Accounts",
-            "Internet search results",
-            "More",
-        ):
-            headers[entry.text] = entry.y
+        section = SECTION_TITLE_MAP.get(entry.text)
+        if section is not None:
+            headers[section] = entry.y
     return headers
 
 
@@ -525,14 +577,9 @@ def _summarize_search_candidates(
 
     for entry in entries:
         # Skip section headers themselves.
-        if entry.text in (
-            "Contacts",
-            "Group Chats",
-            "Chat History",
-            "Official Accounts",
-            "Internet search results",
-            "More",
-        ):
+        if entry.text in SECTION_TITLE_MAP:
+            continue
+        if _is_search_control_entry(entry.text):
             continue
 
         section = _classify_section(entry, headers)
@@ -560,7 +607,7 @@ def _expand_section_if_needed(search_list, section_title: str) -> None:
         return
 
     for entry in entries:
-        if not entry.text.startswith("View All"):
+        if not _is_search_control_entry(entry.text):
             continue
         section = _classify_section(entry, headers)
         if section == section_title:
@@ -696,8 +743,8 @@ def post_scroll(center, delta_lines: int) -> None:
     Post a scroll-wheel event at the given screen position.
 
     On a standard macOS configuration:
-    - Positive delta_lines scrolls towards older content (upwards in history).
-    - Negative delta_lines scrolls towards newer content (downwards in history).
+    - Positive delta_lines scrolls towards newer content (downwards in history).
+    - Negative delta_lines scrolls towards older content (upwards in history).
     """
     cx, cy = center
     event = CGEventCreateScrollWheelEvent(None, kCGScrollEventUnitLine, 1, delta_lines)
